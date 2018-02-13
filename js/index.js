@@ -106,7 +106,7 @@ function render() {
 
         if (hasMouseControls) {
             desiredRotationY = -THREE.Math.degToRad((mouseX - camera.position.x))
-            desiredRotationX = THREE.Math.degToRad((-mouseY - camera.position.y))
+            desiredRotationX = Math.max(0, THREE.Math.degToRad((-mouseY - camera.position.y)))
             houseObject.rotation.x = THREE.Math.lerp(
                 houseObject.rotation.x,
                 desiredRotationX,
