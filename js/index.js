@@ -107,20 +107,20 @@ function render() {
         if (hasMouseControls) {
             desiredRotationY = -THREE.Math.degToRad((mouseX - camera.position.x))
             desiredRotationX = THREE.Math.degToRad((-mouseY - camera.position.y))
+            houseObject.rotation.x = THREE.Math.lerp(
+                houseObject.rotation.x,
+                desiredRotationX,
+                Math.min(maxRotationPerSecond, deltaTime)
+            )
+            houseObject.rotation.y = THREE.Math.lerp(
+                houseObject.rotation.y,
+                desiredRotationY,
+                Math.min(maxRotationPerSecond, deltaTime)
+            )
         } else if (hasGyroControls) {
-            desiredRotationX = THREE.Math.degToRad(-(orientationBeta - 90))
-            desiredRotationY = THREE.Math.degToRad(-orientationAlpha)
+            houseObject.rotation.x = THREE.Math.degToRad(-(orientationBeta - 90))
+            houseObject.rotation.y = THREE.Math.degToRad(-orientationAlpha)
         }
-        houseObject.rotation.x = THREE.Math.lerp(
-            houseObject.rotation.x,
-            desiredRotationX,
-            Math.min(maxRotationPerSecond, deltaTime)
-        )
-        houseObject.rotation.y = THREE.Math.lerp(
-            houseObject.rotation.y,
-            desiredRotationY,
-            Math.min(maxRotationPerSecond, deltaTime)
-        )
     }
 
     renderer.render(scene, camera)
