@@ -1,7 +1,7 @@
 'use strict'
 
 let container, stats
-let camera, scene, renderer
+let camera, scene, renderer, clock
 let mouseX = 0, mouseY = 0
 
 let windowHalfX = window.innerWidth / 2
@@ -49,6 +49,8 @@ function init() {
         }, onProgress, err => console.error(err))
     })
 
+    clock = new THREE.Clock()
+
     //
 
     renderer = new THREE.WebGLRenderer()
@@ -86,8 +88,10 @@ function animate() {
 }
 
 function render() {
-    camera.position.x += (mouseX * 0.01 - camera.position.x) * 0.05
-    camera.position.y += (-mouseY * 0.01 - camera.position.y) * 0.05
+    const deltaTime = clock.getDelta()
+
+    camera.position.x += (mouseX * 0.01 - camera.position.x) * deltaTime * 10
+    camera.position.y += (-mouseY * 0.01 - camera.position.y) * deltaTime * 10
 
     camera.lookAt(scene.position)
 
