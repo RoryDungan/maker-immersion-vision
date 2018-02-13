@@ -1,23 +1,21 @@
 'use strict'
 
-let container, stats
 let camera, scene, renderer, clock, houseObject
 let mouseX = 0, mouseY = 0
 let orientationAlpha = 0, orientationBeta = 0
 let hasMouseControls = false, hasGyroControls = false
 
-let windowHalfX = window.innerWidth / 2
-let windowHalfY = window.innerHeight / 2
+let container = document.getElementById('3d-view')
+let windowHalfX = container.clientWidth / 2
+let windowHalfY = container.clientHeight / 2
 
 init()
 animate()
 
 function init() {
-    container = document.createElement('div')
-    document.body.appendChild(container)
 
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 100)
-    camera.position.z = 5
+    camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.01, 100)
+    camera.position.z = 3
 
     // scene
     scene = new THREE.Scene()
@@ -58,7 +56,7 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({ alpha: true })
     renderer.setPixelRatio(window.devicePixelRatio)
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.setClearColor(0x000000, 0)
     container.appendChild(renderer.domElement)
 
@@ -76,13 +74,13 @@ function init() {
 }
 
 function onWindowResize() {
-    windowHalfX = window.innerWidth / 2
-    windowHalfY = window.innerHeight / 2
+    windowHalfX = container.clientWidth / 2
+    windowHalfY = container.clientHeight / 2
 
-    camera.aspect = window.innerWidth / window.innerHeight
+    camera.aspect = container.clientWidth / container.clientHeight
     camera.updateProjectionMatrix()
 
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(container.clientWidth, container.clientHeight)
 }
 
 function onDocumentMouseMove(event) {
