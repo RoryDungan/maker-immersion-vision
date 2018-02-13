@@ -3,6 +3,8 @@
 let container, stats
 let camera, scene, renderer, clock, houseObject
 let mouseX = 0, mouseY = 0
+let orientationAlpha = 0, orientationBeta = 0
+let hasMouseControls = false, hasGyroControls = false
 
 let windowHalfX = window.innerWidth / 2
 let windowHalfY = window.innerHeight / 2
@@ -15,7 +17,7 @@ function init() {
     document.body.appendChild(container)
 
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 100)
-    camera.position.z = 2.5
+    camera.position.z = 5
 
     // scene
     scene = new THREE.Scene()
@@ -63,7 +65,9 @@ function init() {
     document.addEventListener('mousemove', onDocumentMouseMove, false)
 
     window.addEventListener('deviceorientation', event => {
-
+        hasGyroControls = true
+        orientationAlpha = event.alpha
+        orientationBeta = event.beta
     })
 
     //
@@ -82,6 +86,7 @@ function onWindowResize() {
 }
 
 function onDocumentMouseMove(event) {
+    hasMouseControls = true
     mouseX = (event.clientX - windowHalfX) / 2
     mouseY = (event.clientY - windowHalfY) / 2
 }
@@ -97,9 +102,17 @@ function render() {
     const deltaTime = clock.getDelta()
     const maxRotationPerSecond = 0.1
 
-    if (houseObject) {
-        const desiredRotationY = -THREE.Math.degToRad((mouseX - camera.position.x))
-        const desiredRotationX = THREE.Math.degToRad((-mouseY - camera.position.y))
+    if (houseObject && (hasMouseControls || hasGyroControls)) {
+        let desiredRotationY = 0
+        let desiredRotationX = 0
+
+        if (hasMouseControls) {
+            desiredRotationY = -THREE.Math.degToRad((mouseX - camera.position.x))
+            desiredRotationX = THREE.Math.degToRad((-mouseY - camera.position.y))
+        } else if (hasGyroControls) {
+            desiredRotationX = THREE.Math.degToRad(-(orientationBeta - 90))
+            desiredRotationY = THREE.Math.degToRad(-orientationAlpha)
+        }
         houseObject.rotation.x = THREE.Math.lerp(
             houseObject.rotation.x,
             desiredRotationX,
