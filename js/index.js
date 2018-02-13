@@ -1,7 +1,7 @@
 'use strict'
 
 let container, stats
-let camera, scene, renderer, clock
+let camera, scene, renderer, clock, houseObject
 let mouseX = 0, mouseY = 0
 
 let windowHalfX = window.innerWidth / 2
@@ -46,6 +46,7 @@ function init() {
         objLoader.load('PUSHILIN_house.obj', obj => {
             obj.position.y = 0;
             scene.add(obj)
+            houseObject = obj
         }, onProgress, err => console.error(err))
     })
 
@@ -60,6 +61,10 @@ function init() {
     container.appendChild(renderer.domElement)
 
     document.addEventListener('mousemove', onDocumentMouseMove, false)
+
+    window.addEventListener('deviceorientation', event => {
+
+    })
 
     //
 
@@ -90,11 +95,22 @@ function animate() {
 
 function render() {
     const deltaTime = clock.getDelta()
+    const maxRotationPerSecond = 0.1
 
-    camera.position.x += (mouseX * 0.01 - camera.position.x) * deltaTime * 10
-    camera.position.y += (-mouseY * 0.01 - camera.position.y) * deltaTime * 10
-
-    camera.lookAt(scene.position)
+    if (houseObject) {
+        const desiredRotationY = -THREE.Math.degToRad((mouseX - camera.position.x))
+        const desiredRotationX = THREE.Math.degToRad((-mouseY - camera.position.y))
+        houseObject.rotation.x = THREE.Math.lerp(
+            houseObject.rotation.x,
+            desiredRotationX,
+            Math.min(maxRotationPerSecond, deltaTime)
+        )
+        houseObject.rotation.y = THREE.Math.lerp(
+            houseObject.rotation.y,
+            desiredRotationY,
+            Math.min(maxRotationPerSecond, deltaTime)
+        )
+    }
 
     renderer.render(scene, camera)
 }
