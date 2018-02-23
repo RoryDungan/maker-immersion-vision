@@ -9,13 +9,15 @@ let container = document.getElementById('3d-view')
 let windowHalfX = container.clientWidth / 2
 let windowHalfY = container.clientHeight / 2
 
+let mixers = []
+
 init()
 animate()
 
 function init() {
 
-    camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.01, 100)
-    camera.position.z = 3
+    camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000)
+    camera.position.z = 300
 
     // scene
     scene = new THREE.Scene()
@@ -35,20 +37,19 @@ function init() {
         }
     }
 
-    const mtlLoader = new THREE.MTLLoader()
-    mtlLoader.setPath('models/')
-    mtlLoader.load('PUSHILIN_house.mtl', materials => {
-        materials.preload()
+    const loader = new THREE.FBXLoader()
+    loader.load('models/MakerHouse_01.fbx', obj => {
+        obj.mixer = new THREE.AnimationMixer( obj );
+        mixers.push( obj.mixer );
 
-        const objLoader = new THREE.OBJLoader()
-        objLoader.setMaterials(materials)
-        objLoader.setPath('models/')
-        objLoader.load('PUSHILIN_house.obj', obj => {
-            obj.position.y = 0;
-            scene.add(obj)
-            houseObject = obj
-        }, onProgress, err => console.error(err))
-    })
+        const action = obj.mixer.clipAction(obj.animations[0])
+        action.play()
+        action.setLoop(THREE.LoopPingPong)
+
+        obj.position.y = 0
+        scene.add(obj)
+        houseObject = obj
+    }, onProgress, err => console.error(err))
 
     clock = new THREE.Clock()
 
@@ -92,6 +93,12 @@ function onDocumentMouseMove(event) {
 //
 
 function animate() {
+    if ( mixers.length > 0 ) {
+        for ( var i = 0; i < mixers.length; i ++ ) {
+            mixers[ i ].update( clock.getDelta() );
+        }
+    }
+
     requestAnimationFrame(animate)
     render()
 }
