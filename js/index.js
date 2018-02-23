@@ -1,8 +1,9 @@
 'use strict'
 
-let camera, scene, renderer, clock, houseObject
+let camera, scene, renderer, clock, houseObject, rootObject
 let mouseX = 0, mouseY = 0
-let orientationAlpha = 0, orientationBeta = 0
+const mouseXSensitivity = 3, mouseYSensitivity = 1
+let orientationAlpha = 0, orientationBeta = 0, orientationGamma = 0
 let hasMouseControls = false, hasGyroControls = false
 
 let container = document.getElementById('3d-view')
@@ -17,25 +18,29 @@ animate()
 function init() {
 
     camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000)
-    camera.position.z = 300
+    camera.position.set(0, 0, 300)
+    camera.lookAt(0,0,0)
 
     // scene
     scene = new THREE.Scene()
     scene.background = new THREE.Color(0xffffff)
     scene.fog = new THREE.Fog(0xffffff, 200, 1000)
 
+    rootObject = new THREE.Object3D()
+    scene.add(rootObject)
+
     const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444)
     hemisphereLight.position.set(0, 200, 0)
-    scene.add(hemisphereLight)
+    rootObject.add(hemisphereLight)
 
     const directionalLight = new THREE.DirectionalLight(0xffffff)
-    directionalLight.position.set(0, 200, 100)
+    directionalLight.position.set(200, 200, 100)
     directionalLight.castShadow = true
     directionalLight.shadow.camera.top = 180
     directionalLight.shadow.camera.bottom = -100
     directionalLight.shadow.camera.left = -120
     directionalLight.shadow.camera.right = 120
-    scene.add(directionalLight);
+    rootObject.add(directionalLight);
 
     // ground
     const groundMesh = new THREE.Mesh(
@@ -44,12 +49,12 @@ function init() {
     )
     groundMesh.rotation.x = - Math.PI / 2
     groundMesh.receiveShadow = true
-    scene.add(groundMesh)
+    rootObject.add(groundMesh)
 
-    const grid = new THREE.GridHelper(2000, 20, 0x000000, 0x000000)
+    const grid = new THREE.GridHelper(2000, 200, 0x000000, 0x000000)
     grid.material.opacity = 0.2
     grid.material.transparent = true
-    scene.add(grid)
+    rootObject.add(grid)
 
     // model
     const onProgress = xhr => {
@@ -76,7 +81,7 @@ function init() {
         })
 
         obj.position.y = 24
-        scene.add(obj)
+        rootObject.add(obj)
         houseObject = obj
     }, onProgress, err => console.error(err))
 
@@ -97,6 +102,7 @@ function init() {
         hasGyroControls = true
         orientationAlpha = event.alpha
         orientationBeta = event.beta
+        orientationGamma = event.gamma
     })
 
     //
@@ -123,40 +129,52 @@ function onDocumentMouseMove(event) {
 //
 
 function animate() {
-    if ( mixers.length > 0 ) {
-        for ( var i = 0; i < mixers.length; i ++ ) {
-            mixers[ i ].update( clock.getDelta() );
+    const deltaTime = clock.getDelta()
+
+    if (mixers.length > 0) {
+        for (let i = 0; i < mixers.length; i ++) {
+            mixers[i].update(deltaTime)
         }
     }
 
     requestAnimationFrame(animate)
-    render()
+    render(deltaTime)
 }
 
-function render() {
-    const deltaTime = clock.getDelta()
-    const maxRotationPerSecond = 0.1
+function render(deltaTime) {
+    const maxRotationPerSecond = 3
 
-    if (houseObject && (hasMouseControls || hasGyroControls)) {
+    if (rootObject && (hasMouseControls || hasGyroControls)) {
         let desiredRotationY = 0
         let desiredRotationX = 0
 
-        if (hasMouseControls) {
-            desiredRotationY = -THREE.Math.degToRad((mouseX - camera.position.x))
-            desiredRotationX = Math.max(0, THREE.Math.degToRad((-mouseY - camera.position.y)))
-            houseObject.rotation.x = THREE.Math.lerp(
-                houseObject.rotation.x,
+        if (hasGyroControls) {
+            rootObject.rotation.x = THREE.Math.degToRad(-(orientationBeta - 90))
+            rootObject.rotation.y = THREE.Math.degToRad(-orientationAlpha)
+        } else if (hasMouseControls) {
+            const fractionMouseX = (mouseX / container.clientWidth) * mouseXSensitivity
+            const fractionMouseY = (Math.max(
+                0,
+                Math.min(
+                    container.clientHeight,
+                    mouseY
+                )
+            ) / container.clientHeight) * mouseYSensitivity
+
+            desiredRotationY = fractionMouseX * Math.PI
+            desiredRotationX = Math.max(0, Math.min(Math.PI / 2, fractionMouseY * Math.PI))
+            rootObject.rotation.x = THREE.Math.lerp(
+                rootObject.rotation.x,
                 desiredRotationX,
-                Math.min(maxRotationPerSecond, deltaTime)
+                Math.min(deltaTime * maxRotationPerSecond,
+                    Math.abs(rootObject.rotation.x - desiredRotationX))
             )
-            houseObject.rotation.y = THREE.Math.lerp(
-                houseObject.rotation.y,
+            rootObject.rotation.y = THREE.Math.lerp(
+                rootObject.rotation.y,
                 desiredRotationY,
-                Math.min(maxRotationPerSecond, deltaTime)
+                Math.min(deltaTime * maxRotationPerSecond,
+                    Math.abs(rootObject.rotation.y - desiredRotationY))
             )
-        } else if (hasGyroControls) {
-            houseObject.rotation.x = THREE.Math.degToRad(-(orientationBeta - 90))
-            houseObject.rotation.y = THREE.Math.degToRad(-orientationAlpha)
         }
     }
 
