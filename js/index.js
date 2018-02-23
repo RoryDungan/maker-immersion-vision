@@ -102,7 +102,7 @@ function init() {
     document.addEventListener('mousemove', onDocumentMouseMove, false)
 
     window.addEventListener('deviceorientation', event => {
-        hasGyroControls = true
+        hasGyroControls = event.alpha != null && event.beta != null && event.gamma != null
         orientationAlpha = event.alpha
         orientationBeta = event.beta
         orientationGamma = event.gamma
