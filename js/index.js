@@ -21,13 +21,35 @@ function init() {
 
     // scene
     scene = new THREE.Scene()
+    scene.background = new THREE.Color(0xffffff)
+    scene.fog = new THREE.Fog(0xffffff, 200, 1000)
 
-    const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4)
-    scene.add(ambientLight)
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444)
+    hemisphereLight.position.set(0, 200, 0)
+    scene.add(hemisphereLight)
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.8)
-    camera.add(pointLight)
-    scene.add(camera)
+    const directionalLight = new THREE.DirectionalLight(0xffffff)
+    directionalLight.position.set(0, 200, 100)
+    directionalLight.castShadow = true
+    directionalLight.shadow.camera.top = 180
+    directionalLight.shadow.camera.bottom = -100
+    directionalLight.shadow.camera.left = -120
+    directionalLight.shadow.camera.right = 120
+    scene.add(directionalLight);
+
+    // ground
+    const groundMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2000, 2000),
+        new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
+    )
+    groundMesh.rotation.x = - Math.PI / 2
+    groundMesh.receiveShadow = true
+    scene.add(groundMesh)
+
+    const grid = new THREE.GridHelper(2000, 20, 0x000000, 0x000000)
+    grid.material.opacity = 0.2
+    grid.material.transparent = true
+    scene.add(grid)
 
     // model
     const onProgress = xhr => {
@@ -38,15 +60,22 @@ function init() {
     }
 
     const loader = new THREE.FBXLoader()
-    loader.load('models/MakerHouse_01.fbx', obj => {
-        obj.mixer = new THREE.AnimationMixer( obj );
-        mixers.push( obj.mixer );
+    loader.load('models/MakerHouse_01.FBX', obj => {
+        obj.mixer = new THREE.AnimationMixer(obj)
+        mixers.push(obj.mixer)
 
         const action = obj.mixer.clipAction(obj.animations[0])
         action.play()
         action.setLoop(THREE.LoopPingPong)
 
-        obj.position.y = 0
+        obj.traverse(child => {
+            if (child.isMesh) {
+                child.castShadow = true
+                child.receiveShadow = true
+            }
+        })
+
+        obj.position.y = 24
         scene.add(obj)
         houseObject = obj
     }, onProgress, err => console.error(err))
@@ -59,6 +88,7 @@ function init() {
     renderer.setPixelRatio(window.devicePixelRatio)
     renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.setClearColor(0x000000, 0)
+    renderer.shadowMap.enabled = true
     container.appendChild(renderer.domElement)
 
     document.addEventListener('mousemove', onDocumentMouseMove, false)
