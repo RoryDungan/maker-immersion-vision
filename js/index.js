@@ -29,6 +29,9 @@ function init() {
     rootObject = new THREE.Object3D()
     scene.add(rootObject)
 
+    // lighting
+    scene.add(new THREE.AmbientLight(0xcccccc, 0.4))
+
     const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444)
     hemisphereLight.position.set(0, 200, 0)
     rootObject.add(hemisphereLight)
@@ -65,7 +68,7 @@ function init() {
     }
 
     const loader = new THREE.FBXLoader()
-    loader.load('models/MakerHouse_01.FBX', obj => {
+    loader.load('models/MakerHouse_03.FBX', obj => {
         obj.mixer = new THREE.AnimationMixer(obj)
         mixers.push(obj.mixer)
 
@@ -80,7 +83,7 @@ function init() {
             }
         })
 
-        obj.position.y = 24
+        obj.position.y = 0
         rootObject.add(obj)
         houseObject = obj
     }, onProgress, err => console.error(err))
@@ -150,7 +153,7 @@ function render(deltaTime) {
 
         if (hasGyroControls) {
             rootObject.rotation.x = THREE.Math.degToRad(-(orientationBeta - 90))
-            rootObject.rotation.y = THREE.Math.degToRad(-orientationAlpha)
+            rootObject.rotation.y = THREE.Math.degToRad(-orientationAlpha - 90)
         } else if (hasMouseControls) {
             const fractionMouseX = (mouseX / container.clientWidth) * mouseXSensitivity
             const fractionMouseY = (Math.max(
