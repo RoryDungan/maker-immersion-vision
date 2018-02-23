@@ -84,7 +84,7 @@ function init() {
 
     //
 
-    renderer = new THREE.WebGLRenderer({ alpha: true })
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setPixelRatio(window.devicePixelRatio)
     renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.setClearColor(0x000000, 0)
